@@ -114,8 +114,69 @@ namespace _5paisaAPI
             return strresponse;
 
         }
+        public static string SendApiRequestHistory(string url, string Request = "", string RequestType = "POST")
+        {
+            string strresponse = "";
+            var cookie = GetCookiesByName("5paisacookie");
+            var token = GetCookiesByName("JwtToken");
+            try
+            {
+                var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
+                if (RequestType.Equals("POST"))
+                {
+                    httpWebRequest.Method = RequestType;
+                    httpWebRequest.Headers.Add("Cookie", GetCookiesByName("5paisacookie"));
+                    httpWebRequest.ContentType = "application/json";
 
-       
+
+                }
+                else
+                {
+                    //httpWebRequest.Headers.Add("Ocp-Apim-Subscription-Key", GetCookiesByName("ASPXAUTH"));
+                    httpWebRequest.Headers.Add("x-clientcode", "56159485");
+                    httpWebRequest.Headers.Add("x-auth-token", token);
+                    httpWebRequest.Method = RequestType;
+
+                }
+
+                //if (RequestType.Equals("Openapi"))
+                //{
+                //    httpWebRequest.Headers.Add("Cookie", GetCookiesByName("5paisacookie"));
+                //}
+                //else if (RequestType.Equals("Socket"))
+                //{
+                //    httpWebRequest.Headers.Add("Cookie", GetCookiesByName("ASPXAUTH"));
+                //}
+
+
+                //using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
+                //{
+                //    if (!string.IsNullOrEmpty(Request))
+                //        streamWriter.Write(Request);
+                //}
+                using (var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse())
+                {
+                    using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+                    {
+                        strresponse = streamReader.ReadToEnd();
+                    }
+
+                    if (httpResponse.StatusCode != HttpStatusCode.OK)
+                    {
+                        throw new Exception(string.Format("Server error (HTTP {0}: {1}).", httpResponse.StatusCode, httpResponse.StatusDescription));
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+
+            return strresponse;
+
+        }
+
+
         public static void SetCookies(string CookieName)
         {
             var value = CookieName.Split(';');

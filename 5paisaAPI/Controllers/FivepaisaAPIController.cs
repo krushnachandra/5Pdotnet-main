@@ -28,7 +28,7 @@ namespace _5paisaAPI.Controllers
             _NetPositionNetWise, _Holding, _OrderStatus, _TradeInformation, _OrderBook,
             _TradeBook, _Margin, _MarketFeed, _OrderRequest, _ModifyOrderRequest, _CancelOrderRequest,
             _SMOOrderRequest, _ModifySMOOrder, _OpenAPIFeedURL, _LoginCheck, _WbSocketURl,
-            _History;
+            _History, _SquareOffAll;
 
         public FivepaisaAPIController(IConfiguration _iConfig)//
         {
@@ -59,6 +59,7 @@ namespace _5paisaAPI.Controllers
             _LoginCheck = _OpenAPIFeedURL + _iConfig.GetValue<string>("APIDetails:LoginCheck");
             _WbSocketURl = _iConfig.GetValue<string>("APIDetails:WbSocketURl");
             _History = _iConfig.GetValue<string>("APIDetails:history");
+            _SquareOffAll = _iConfig.GetValue<string>("APIDetails:SquareOffAll");
 
         }
 
@@ -120,7 +121,6 @@ namespace _5paisaAPI.Controllers
         }
 
         [HttpGet]
-        //[EnableCors("AllowOrigin")]
         [Route("Holding")]
         public ResponseModel Holding()
         {
@@ -625,23 +625,53 @@ namespace _5paisaAPI.Controllers
         }
 
         [HttpGet]
-        [Route("historical")]
-        public ResponseModel historical()
+        [Route("SquareOffAll")]
+        public ResponseModel SquareOffAllOrderRequest(string exchOrderID)
         {
             ResponseModel objResponseModel = new ResponseModel();
             try
             {
-                //_JsonData.Head.requestCode = _JsonData.RequestCode.History;
-                //_JsonData.ModifySMOOrder.ClientCode = _JsonData.Common.ClientCode;
-                //_JsonData.ModifySMOOrder.OrderRequesterCode = _JsonData.Common.ClientCode;
 
-                //ModifySMOOrderRequest Request = new ModifySMOOrderRequest
-                //{
-                //    head = _JsonData.Head,
-                //    //body = _JsonData.ModifySMOOrder
-                //};
 
-                string response = ApiRequest.SendApiRequestCookies(_History, "", "GET");
+                _JsonData.Head.requestCode = _JsonData.RequestCode.SquareOffAll;
+
+                CommonReuqest Request = new CommonReuqest
+                {
+                    head = _JsonData.Head,
+                    body = _JsonData.Common
+                };
+
+
+
+                string response = ApiRequest.SendApiRequestCookies(_SquareOffAll, JsonConvert.SerializeObject(Request));
+
+                if (response != null)
+                {
+
+                    objResponseModel.ResponseData = JsonConvert.DeserializeObject<Response<object>>(response);
+
+                    return objResponseModel;
+
+                }
+
+
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+
+            return objResponseModel;
+        }
+        [HttpGet]
+        [Route("Historical")]
+        public ResponseModel Historical()
+        {
+            ResponseModel objResponseModel = new ResponseModel();
+            try
+            {
+
+                string response = ApiRequest.SendApiRequestHistory(_History, "", "Get");
 
                 objResponseModel.ResponseData = JsonConvert.DeserializeObject<Response<HistoryResponse>>(response);
             }
