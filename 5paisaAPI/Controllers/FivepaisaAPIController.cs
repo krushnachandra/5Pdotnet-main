@@ -24,7 +24,7 @@ namespace _5paisaAPI.Controllers
     public class FivepaisaAPIController : ControllerBase
     {
         private readonly JsonData _JsonData;
-        private readonly string _MyKey, _OpenAPIURL, _LoginRequestMobileNewbyEmail,
+        private  string _MyKey, _OpenAPIURL, _LoginRequestMobileNewbyEmail,
             _NetPositionNetWise, _Holding, _OrderStatus, _TradeInformation, _OrderBook,
             _TradeBook, _Margin, _MarketFeed, _OrderRequest, _ModifyOrderRequest, _CancelOrderRequest,
             _SMOOrderRequest, _ModifySMOOrder, _OpenAPIFeedURL, _LoginCheck, _WbSocketURl,
@@ -665,15 +665,24 @@ namespace _5paisaAPI.Controllers
         }
         [HttpGet]
         [Route("Historical")]
-        public ResponseModel Historical()
+        public HistoryResponse Historical(int scriptcode)
         {
-            ResponseModel objResponseModel = new ResponseModel();
+            HistoryResponse objResponseModel = new HistoryResponse();
+
             try
             {
+                //1594 / 1d ? from = 2022 - 01 - 24 & end = 2022 - 08 - 05
+
+                _History = _History + scriptcode + "/1d?from=2020-01-24&end=2022-08-05";
 
                 string response = ApiRequest.SendApiRequestHistory(_History, "", "Get");
 
-                objResponseModel.ResponseData = JsonConvert.DeserializeObject<Response<HistoryResponse>>(response);
+                //objResponseModel = JsonConvert.DeserializeObject<Response<object>>(response);
+                //objResponseModel = JsonConvert.DeserializeObject<HistoryResponse>(response);
+
+                objResponseModel = JsonConvert.DeserializeObject<HistoryResponse>(response);
+
+
             }
             catch (Exception ex)
             {

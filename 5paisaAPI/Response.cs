@@ -334,12 +334,23 @@ namespace _5paisaAPI
 
     }
 
+    //public class HistoryResponse
+    //{
+    //    public int status { get; set; }
+    //    public List<Candles> data { get; set; }
+        //public List<Candles> candles { get; set; }
+        
+    //}
+
+    public class Data
+    {
+        public List<List<object>> candles { get; set; }
+    }
+
     public class HistoryResponse
     {
         public string status { get; set; }
-        public List<Candles> Data { get; set; }
-        public List<Candles> candles { get; set; }
-        
+        public Data data { get; set; }
     }
 
     public class LoginCheckResponse
