@@ -672,8 +672,25 @@ namespace _5paisaAPI.Controllers
             try
             {
                 //1594 / 1d ? from = 2022 - 01 - 24 & end = 2022 - 08 - 05
+                var currentDate = DateTime.Now.ToString("yyyy-MM-dd");
+                var sevendaysdaysBack = DateTime.Now.AddDays(-90).ToString("yyyy-MM-dd");
+                //sevendaysdaysBack = sevendaysdaysBack.AddDays(-1);
 
-                _History = _History + scriptcode + "/1d?from=2020-01-24&end=2022-08-05";
+                //sevendaysdaysBack = DateTime.Today.AddDays(-7);
+                //dateRange.To = DateTime.Today.AddDays(1);
+
+                var oneMonthBack = DateTime.Now.ToString("yyyy-MM-dd");
+                
+                var threeMonthBack = DateTime.Now.ToString("yyyy-MM-dd");
+                var sixMonthBack = DateTime.Now.ToString("yyyy-MM-dd");
+                var oneYeBack = DateTime.Now.ToString("yyyy-MM-dd");
+
+
+
+
+
+                _History = _History + scriptcode + "/5m?from=" + sevendaysdaysBack + "&end=" + currentDate;
+
 
                 string response = ApiRequest.SendApiRequestHistory(_History, "", "Get");
 
