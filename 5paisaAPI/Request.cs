@@ -30,10 +30,7 @@ namespace _5paisaAPI
         public string SMOOrderRequest { get; set; }
         public string ModifySMOOrder { get; set; }
         public string LoginCheck { get; set; }
-        public string History { get;  set; }
-        public string SquareOffAll { get;  set; }
-
-
+        public string History { get; internal set; }
     }
     public class Head
     {

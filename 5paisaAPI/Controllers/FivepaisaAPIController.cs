@@ -24,11 +24,11 @@ namespace _5paisaAPI.Controllers
     public class FivepaisaAPIController : ControllerBase
     {
         private readonly JsonData _JsonData;
-        private  string _MyKey, _OpenAPIURL, _LoginRequestMobileNewbyEmail,
+        private readonly string _MyKey, _OpenAPIURL, _LoginRequestMobileNewbyEmail,
             _NetPositionNetWise, _Holding, _OrderStatus, _TradeInformation, _OrderBook,
             _TradeBook, _Margin, _MarketFeed, _OrderRequest, _ModifyOrderRequest, _CancelOrderRequest,
             _SMOOrderRequest, _ModifySMOOrder, _OpenAPIFeedURL, _LoginCheck, _WbSocketURl,
-            _History, _SquareOffAll;
+            _History;
 
         public FivepaisaAPIController(IConfiguration _iConfig)//
         {
@@ -59,7 +59,6 @@ namespace _5paisaAPI.Controllers
             _LoginCheck = _OpenAPIFeedURL + _iConfig.GetValue<string>("APIDetails:LoginCheck");
             _WbSocketURl = _iConfig.GetValue<string>("APIDetails:WbSocketURl");
             _History = _iConfig.GetValue<string>("APIDetails:history");
-            _SquareOffAll = _iConfig.GetValue<string>("APIDetails:SquareOffAll");
 
         }
 
@@ -121,6 +120,7 @@ namespace _5paisaAPI.Controllers
         }
 
         [HttpGet]
+        //[EnableCors("AllowOrigin")]
         [Route("Holding")]
         public ResponseModel Holding()
         {
@@ -625,81 +625,16 @@ namespace _5paisaAPI.Controllers
         }
 
         [HttpGet]
-        [Route("SquareOffAll")]
-        public ResponseModel SquareOffAllOrderRequest(string exchOrderID)
+        [Route("historical")]
+        public ResponseModel historical()
         {
             ResponseModel objResponseModel = new ResponseModel();
             try
             {
-
-
-                _JsonData.Head.requestCode = _JsonData.RequestCode.SquareOffAll;
-
-                CommonReuqest Request = new CommonReuqest
-                {
-                    head = _JsonData.Head,
-                    body = _JsonData.Common
-                };
-
-
-
-                string response = ApiRequest.SendApiRequestCookies(_SquareOffAll, JsonConvert.SerializeObject(Request));
-
-                if (response != null)
-                {
-
-                    objResponseModel.ResponseData = JsonConvert.DeserializeObject<Response<object>>(response);
-
-                    return objResponseModel;
-
-                }
-
-
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-
-            return objResponseModel;
-        }
-        [HttpGet]
-        [Route("Historical")]
-        public HistoryResponse Historical(int scriptcode)
-        {
-            HistoryResponse objResponseModel = new HistoryResponse();
-
-            try
-            {
-                //1594 / 1d ? from = 2022 - 01 - 24 & end = 2022 - 08 - 05
-                var currentDate = DateTime.Now.ToString("yyyy-MM-dd");
-                var sevendaysdaysBack = DateTime.Now.AddDays(-90).ToString("yyyy-MM-dd");
-                //sevendaysdaysBack = sevendaysdaysBack.AddDays(-1);
-
-                //sevendaysdaysBack = DateTime.Today.AddDays(-7);
-                //dateRange.To = DateTime.Today.AddDays(1);
-
-                var oneMonthBack = DateTime.Now.ToString("yyyy-MM-dd");
                 
-                var threeMonthBack = DateTime.Now.ToString("yyyy-MM-dd");
-                var sixMonthBack = DateTime.Now.ToString("yyyy-MM-dd");
-                var oneYeBack = DateTime.Now.ToString("yyyy-MM-dd");
-
-
-
-
-
-                _History = _History + scriptcode + "/5m?from=" + sevendaysdaysBack + "&end=" + currentDate;
-
-
                 string response = ApiRequest.SendApiRequestHistory(_History, "", "Get");
 
-                //objResponseModel = JsonConvert.DeserializeObject<Response<object>>(response);
-                //objResponseModel = JsonConvert.DeserializeObject<HistoryResponse>(response);
-
-                objResponseModel = JsonConvert.DeserializeObject<HistoryResponse>(response);
-
-
+                objResponseModel.ResponseData = JsonConvert.DeserializeObject<Response<HistoryResponse>>(response);
             }
             catch (Exception ex)
             {
