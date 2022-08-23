@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -30,7 +31,10 @@ namespace _5paisaAPI
         public string SMOOrderRequest { get; set; }
         public string ModifySMOOrder { get; set; }
         public string LoginCheck { get; set; }
-        public string History { get; internal set; }
+        public string History { get;  set; }
+        public string SquareOffAll { get;  set; }
+
+
     }
     public class Head
     {
@@ -161,7 +165,9 @@ namespace _5paisaAPI
         public int ExchOrderID { get; set; }
         public int DisQty { get; set; }
         public bool IsStopLossOrder { get; set; }
-        public int StopLossPrice { get; set; }
+        public double StopLossPrice { get; set; }
+        public double TriggerPriceForSL { get; set; }
+
         public bool IsVTD { get; set; }
         public bool IOCOrder { get; set; }
         public bool IsIntraday { get; set; }
@@ -190,8 +196,7 @@ namespace _5paisaAPI
         public double Stoplossprice { get; set; }
         public int AppSource { get; set; }
         public string RemoteOrderID { get; set; }
-
-
+        //public double TriggerPriceForSL { get; internal set; }
     }
     public class ModifyOrderRequestData
     {
@@ -208,6 +213,30 @@ namespace _5paisaAPI
         public Head head { get; set; }
         public CancelOrderRequest body { get; set; }
     }
+
+ 
+    public class CancelOrderRequestBulk
+    {
+        public List<ExchOrderID> ExchOrderIDs { get; set; }
+    }
+    public partial class ExchOrderID
+    {
+        [JsonProperty("ExchOrderID")]
+        public string ExchOrderIdExchOrderId { get; set; }
+    }
+
+
+    public class CancelOrderBulkRequestData
+    {
+        public Head head { get; set; }
+        public CancelOrderRequestBulk body { get; set; }
+    }
+
+
+
+
+
+
 
 
     public class SMOOrderRequest
@@ -347,6 +376,7 @@ namespace _5paisaAPI
         public MarketFeed MarketFeedTabTwo { get;  set; }
         public MarketFeed MarketFeedTabThree { get;  set; }
         public MarketFeed MarketFeedTabFour { get;  set; }
+        public Common CancelOrderBulkRequestData { get;  set; }
     }
 
 

@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.OpenApi.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,17 +29,37 @@ namespace _5paisaAPI
         {
            
             services.AddControllers();
-            
-            services.AddCors(options =>
-            {
-                options.AddPolicy("CorsPolicy", builder => builder
-                .WithOrigins("http://localhost:4200")
-                .AllowAnyMethod()
-                .AllowAnyHeader()
-                .AllowCredentials());
-            });
+
+            //services.AddCors(options =>
+            //{
+            //    options.AddPolicy("CorsPolicy", builder => builder
+            //    .WithOrigins("http://localhost:4200")
+            //    .AllowAnyMethod()
+            //    .AllowAnyHeader()
+            //    .AllowCredentials());
+            //});
+
+
             // Registering SignalR
             //services.AddSignalR();
+            services.AddCors(options =>
+            {
+                options.AddDefaultPolicy(builder => builder
+                .AllowAnyOrigin()
+                .AllowAnyHeader()
+                .AllowAnyMethod());
+            });
+            services.AddSwaggerGen();
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo
+                {
+                    Version = "v1",
+                    Title = "Implement Swagger UI",
+                    Description = "A simple example to Implement Swagger UI",
+                });
+            });
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -54,10 +75,14 @@ namespace _5paisaAPI
            
             app.UseRouting();
             
-            app.UseCors("CorsPolicy");
+            app.UseCors();
 
 
             app.UseAuthorization();
+            app.UseSwagger();
+            app.UseSwaggerUI(c => {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Showing API V1");
+            });
             //app.UseWebSockets(new WebSocketOptions
             //{
             //    KeepAliveInterval = TimeSpan.FromSeconds(120),

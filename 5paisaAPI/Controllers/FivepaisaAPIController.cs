@@ -24,13 +24,13 @@ namespace _5paisaAPI.Controllers
     public class FivepaisaAPIController : ControllerBase
     {
         private readonly JsonData _JsonData;
-        private readonly string _MyKey, _OpenAPIURL, _LoginRequestMobileNewbyEmail,
+        private string _MyKey, _OpenAPIURL, _LoginRequestMobileNewbyEmail,
             _NetPositionNetWise, _Holding, _OrderStatus, _TradeInformation, _OrderBook,
             _TradeBook, _Margin, _MarketFeed, _OrderRequest, _ModifyOrderRequest, _CancelOrderRequest,
             _SMOOrderRequest, _ModifySMOOrder, _OpenAPIFeedURL, _LoginCheck, _WbSocketURl,
-            _History;
+            _History, _SquareOffAll, _CancelOrderBulk;
 
-        public FivepaisaAPIController(IConfiguration _iConfig)//
+        public FivepaisaAPIController(IConfiguration _iConfig)
         {
             var folderDetails = Path.Combine(Directory.GetCurrentDirectory(), "APICredentials.json");
             var JSON = System.IO.File.ReadAllText(folderDetails);
@@ -59,6 +59,8 @@ namespace _5paisaAPI.Controllers
             _LoginCheck = _OpenAPIFeedURL + _iConfig.GetValue<string>("APIDetails:LoginCheck");
             _WbSocketURl = _iConfig.GetValue<string>("APIDetails:WbSocketURl");
             _History = _iConfig.GetValue<string>("APIDetails:history");
+            _SquareOffAll = _iConfig.GetValue<string>("APIDetails:SquareOffAll");
+            _CancelOrderBulk = _iConfig.GetValue<string>("APIDetails:CancelOrderBulk");
 
         }
 
@@ -120,7 +122,6 @@ namespace _5paisaAPI.Controllers
         }
 
         [HttpGet]
-        //[EnableCors("AllowOrigin")]
         [Route("Holding")]
         public ResponseModel Holding()
         {
@@ -333,15 +334,11 @@ namespace _5paisaAPI.Controllers
 
         [HttpGet]
         [Route("OrderRequest")]
-        public ResponseModel OrderRequest(int scripCode, double price, double perofchg, string orderType)
+        public ResponseModel OrderRequest(int scripCode, double price, int quantity, string orderType)
         {
             ResponseModel objResponseModel = new ResponseModel();
             try
             {
-               //var scripData = prepareMonthlyExpiryFuturesSymbol("NTPC");
-                //_JsonData.OrderRequest.ScripData = scripData;
-                //_JsonData.OrderRequest.ExchangeType = "D";
-
 
                 _JsonData.Head.requestCode = _JsonData.RequestCode.OrderRequest;
                 _JsonData.OrderRequest.ClientCode = _JsonData.Common.ClientCode;
@@ -352,7 +349,7 @@ namespace _5paisaAPI.Controllers
                 _JsonData.OrderRequest.OrderType = orderType;
 
                 // price 
-                _JsonData.OrderRequest.Qty = 10;
+                _JsonData.OrderRequest.Qty = quantity;
                 //if ((price < 300) && (price < 500)) _JsonData.OrderRequest.Qty = 1000;
                 //if ((price < 500) && (price < 750)) _JsonData.OrderRequest.Qty = 750;
                 //if ((price < 750) && (price < 1000)) _JsonData.OrderRequest.Qty = 500;
@@ -402,14 +399,14 @@ namespace _5paisaAPI.Controllers
                     {
                         _JsonData.OrderRequest.OrderType = "B";
                         _JsonData.OrderRequest.StopLossPrice = (int)roundToNSEPrice(price + price * 2 / 100);
-                        //_JsonData.OrderRequest.StopLossPrice = (int)(_JsonData.OrderRequest.Price - 1);
+                       // _JsonData.OrderRequest.TriggerPriceForSL = (int)roundToNSEPrice(price + price * 1.15 / 100);
 
                     }
                     else
                     {
                         _JsonData.OrderRequest.OrderType = "S";
                         _JsonData.OrderRequest.StopLossPrice = (int)roundToNSEPrice(price - price * 2 / 100);
-                        // _JsonData.OrderRequest.StopLossPrice = (int)(_JsonData.OrderRequest.Price + 1);
+                        //_JsonData.OrderRequest.TriggerPriceForSL = (int)roundToNSEPrice(price - price * 1.2 / 100);
 
                     }
 
@@ -420,6 +417,85 @@ namespace _5paisaAPI.Controllers
                 }
 
                 objResponseModel.ResponseData = JsonConvert.DeserializeObject<Response<OrderRequestResponse>>(response);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+
+            return objResponseModel;
+        }
+
+
+        [HttpGet]
+        [Route("ExitPosition")]
+        public ResponseModel ExitPosition(int scripCode, double price, int quantity, string orderType)
+        {
+            ResponseModel objResponseModel = new ResponseModel();
+            try
+            {
+                //var scripData = prepareMonthlyExpiryFuturesSymbol("NTPC");
+                //_JsonData.OrderRequest.ScripData = scripData;
+                //_JsonData.OrderRequest.ExchangeType = "D";
+
+
+                _JsonData.Head.requestCode = _JsonData.RequestCode.OrderRequest;
+                _JsonData.OrderRequest.ClientCode = _JsonData.Common.ClientCode;
+                _JsonData.OrderRequest.OrderRequesterCode = _JsonData.Common.ClientCode;
+                _JsonData.OrderRequest.ExchangeType = "C";
+
+                _JsonData.OrderRequest.ScripCode = scripCode;
+                _JsonData.OrderRequest.OrderType = orderType;
+
+                // price 
+                _JsonData.OrderRequest.Qty = quantity;
+                _JsonData.OrderRequest.Price = 0;
+                _JsonData.OrderRequest.AtMarket = true;
+
+
+                //if ((price < 300) && (price < 500)) _JsonData.OrderRequest.Qty = 1000;
+                //if ((price < 500) && (price < 750)) _JsonData.OrderRequest.Qty = 750;
+                //if ((price < 750) && (price < 1000)) _JsonData.OrderRequest.Qty = 500;
+                //if ((price < 1000) && (price < 1250)) _JsonData.OrderRequest.Qty = 400;
+                //if ((price < 1250) && (price < 1500)) _JsonData.OrderRequest.Qty = 350;
+                //if ((price < 1500) && (price < 1750)) _JsonData.OrderRequest.Qty = 300;
+                //if ((price < 1750) && (price < 2000)) _JsonData.OrderRequest.Qty = 250;
+                //if ((price < 2000) && (price < 2250)) _JsonData.OrderRequest.Qty = 200;
+                //if ((price < 2250) && (price < 2500)) _JsonData.OrderRequest.Qty = 150;
+                //if ((price < 2500) && (price < 3000)) _JsonData.OrderRequest.Qty = 100;
+
+
+                //if (orderType == "S")
+                //{
+                //    _JsonData.OrderRequest.Price = roundToNSEPrice(price + price * 0.1 / 100);
+                //}
+                //else
+                //{
+                //    _JsonData.OrderRequest.Price = roundToNSEPrice(price - price * 0.1 / 100);
+                //}
+
+
+                // check the price which range based on that allocate quantity max allocation 20k
+
+                // check the percentage minimum  5% increased in 10 mins
+
+                // dont trade in same script before it comes to 15% raise
+
+                // Do sell with .5% higher price
+
+                OrderRequestData Request = new OrderRequestData
+                {
+                    head = _JsonData.Head,
+                    body = _JsonData.OrderRequest
+                };
+
+                string response = ApiRequest.SendApiRequestCookies(_OrderRequest, JsonConvert.SerializeObject(Request));
+
+                if (response != null)
+                {
+                    objResponseModel.ResponseData = JsonConvert.DeserializeObject<Response<OrderRequestResponse>>(response);
+                }
+
             }
             catch (Exception)
             {
@@ -510,27 +586,106 @@ namespace _5paisaAPI.Controllers
 
             return objResponseModel;
         }
-
+        /// <summary>
+        /// place a stoploss order 
+        /// </summary>
+        /// <param name="scripCode"></param>
+        /// <param name="price"></param>
+        /// <param name="quantity"></param>
+        /// <param name="orderType"></param>
+        /// <returns></returns>
         [HttpGet]
         [Route("StopLossOrderRequest")]
-        public ResponseModel StopLossOrderRequest(int scripCode, double price, string orderType)
+        public ResponseModel StopLossOrderRequest(int scripCode, double price, int quantity, string orderType)
         {
             ResponseModel objResponseModel = new ResponseModel();
             try
             {
+
                 _JsonData.Head.requestCode = _JsonData.RequestCode.OrderRequest;
                 _JsonData.OrderRequest.ClientCode = _JsonData.Common.ClientCode;
                 _JsonData.OrderRequest.OrderRequesterCode = _JsonData.Common.ClientCode;
+                _JsonData.OrderRequest.ExchangeType = "C";
+
                 _JsonData.OrderRequest.ScripCode = scripCode;
-                _JsonData.OrderRequest.Price = roundToNSEPrice(price + price * 0.5 / 100);
-                var stopLossprice = roundToNSEPrice(price + price * 3 / 100);
-                _JsonData.OrderRequest.StopLossPrice = (int)stopLossprice;
-                _JsonData.OrderRequest.Qty = 2;
+                
+
+                // price 
+                _JsonData.OrderRequest.Qty = quantity;
+
+                _JsonData.OrderRequest.Price = price;
+
                 _JsonData.OrderRequest.IsStopLossOrder = true;
+                _JsonData.OrderRequest.AtMarket = true;
+
+
+                // check the price which range based on that allocate quantity max allocation 20k
+
+                // check the percentage minimum  5% increased in 10 mins
+
+                // dont trade in same script before it comes to 15% raise
+
+                // Do sell with .5% higher price
+
+                // once response is success place once more buy order
+
+
+                if (orderType == "S")
+                {
+                    _JsonData.OrderRequest.StopLossPrice = (int)roundToNSEPrice(price + price * 0.5 / 100);
+                    _JsonData.OrderRequest.OrderType = "B";
+
+                }
+                else
+                {
+                    _JsonData.OrderRequest.StopLossPrice = (int)roundToNSEPrice(price - price * 0.5 / 100);
+                    _JsonData.OrderRequest.OrderType = "S";
+
+                }
+                OrderRequestData Request = new OrderRequestData
+                {
+                    head = _JsonData.Head,
+                    body = _JsonData.OrderRequest
+                };
+
+                string response = ApiRequest.SendApiRequestCookies(_OrderRequest, JsonConvert.SerializeObject(Request));
+
+                if (response != null)
+                {
+
+                    objResponseModel.ResponseData = JsonConvert.DeserializeObject<Response<OrderRequestResponse>>(response);
+                    return objResponseModel;
+                }
+
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+            return objResponseModel;
+
+        }
+
+        [HttpGet]
+        [Route("TrailStopLossOrder")]
+        public ResponseModel TrailStopLossOrder(int scripCode, double price, int quantity, string orderType)
+        {
+            ResponseModel objResponseModel = new ResponseModel();
+            try
+            {
+
+                _JsonData.Head.requestCode = _JsonData.RequestCode.OrderRequest;
+                _JsonData.OrderRequest.ClientCode = _JsonData.Common.ClientCode;
+                _JsonData.OrderRequest.OrderRequesterCode = _JsonData.Common.ClientCode;
+                _JsonData.OrderRequest.ExchangeType = "C";
+
+                _JsonData.OrderRequest.ScripCode = scripCode;
+
+                // price 
+                _JsonData.OrderRequest.Qty = quantity;
+
+                _JsonData.OrderRequest.Price = price;
                 _JsonData.OrderRequest.OrderType = orderType;
-
-
-
 
                 // check the price which range based on that allocate quantity max allocation 20k
 
@@ -546,17 +701,82 @@ namespace _5paisaAPI.Controllers
                     body = _JsonData.OrderRequest
                 };
 
+                // once response is success place once more buy order
+                _JsonData.OrderRequest.IsStopLossOrder = true;
+                _JsonData.OrderRequest.AtMarket = true;
+
+
+                if (orderType == "S")
+                {
+                    _JsonData.OrderRequest.StopLossPrice = (int)roundToNSEPrice(price + price * 0.1 / 100);
+                }
+                else
+                {
+                    _JsonData.OrderRequest.StopLossPrice = (int)roundToNSEPrice(price - price * 0.1 / 100);
+
+                }
+
                 string response = ApiRequest.SendApiRequestCookies(_OrderRequest, JsonConvert.SerializeObject(Request));
 
+                if (response != null)
+                {
 
-                // once response is success place once more buy order
+                    objResponseModel.ResponseData = JsonConvert.DeserializeObject<Response<OrderRequestResponse>>(response);
+                    return objResponseModel;
+                }
 
-                _JsonData.OrderRequest.Price = roundToNSEPrice(price - price * 5 / 100);
-                _JsonData.OrderRequest.OrderType = "B";
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+            return objResponseModel;
+        }
 
-                string response1 = ApiRequest.SendApiRequestCookies(_OrderRequest, JsonConvert.SerializeObject(Request));
 
-                objResponseModel.ResponseData = JsonConvert.DeserializeObject<Response<OrderRequestResponse>>(response);
+        /// <summary>
+        /// not working because of 5 paisa issue in not supporting
+        /// </summary>
+        /// <param name="price"></param>
+        /// <param name="qty"></param>
+        /// <param name="exchOrderID"></param>
+        /// <returns></returns>
+        [HttpGet]
+        [Route("ModifyStopLossOrder")]
+        public ResponseModel ModifyStopLossOrder(double price, int qty, string exchOrderID)
+        {
+            ResponseModel objResponseModel = new ResponseModel();
+            try
+            {
+                //_JsonData.OrderRequest.ClientCode = _JsonData.Common.ClientCode;
+                //_JsonData.OrderRequest.OrderRequesterCode = _JsonData.Common.ClientCode;
+                // price 
+                _JsonData.ModifyOrderRequest.Stoplossprice = roundToNSEPrice(price) - 1;
+                _JsonData.ModifyOrderRequest.Price = roundToNSEPrice(price) - 1.1;
+
+                //_JsonData.ModifyOrderRequest.Price = roundToNSEPrice(price); ;
+
+                _JsonData.ModifyOrderRequest.Qty = qty;
+                _JsonData.ModifyOrderRequest.ExchOrderID = exchOrderID;
+
+                ModifyOrderRequestData Request = new ModifyOrderRequestData
+                {
+                    head = _JsonData.Head,
+                    body = _JsonData.ModifyOrderRequest
+                };
+
+                string response = ApiRequest.SendApiRequestCookies(_ModifyOrderRequest, JsonConvert.SerializeObject(Request));
+
+                if (response != null)
+                {
+
+                    objResponseModel.ResponseData = JsonConvert.DeserializeObject<Response<OrderRequestResponse>>(response);
+
+                    return objResponseModel;
+
+                }
+
+
             }
             catch (Exception)
             {
@@ -565,7 +785,6 @@ namespace _5paisaAPI.Controllers
 
             return objResponseModel;
         }
-
         [HttpGet]
         [Route("SMOOrderRequest")]
         public ResponseModel SMOOrderRequest()
@@ -625,16 +844,137 @@ namespace _5paisaAPI.Controllers
         }
 
         [HttpGet]
-        [Route("historical")]
-        public ResponseModel historical()
+        [Route("SquareOffAll")]
+        public ResponseModel SquareOffAllOrderRequest(string exchOrderID)
         {
             ResponseModel objResponseModel = new ResponseModel();
             try
             {
-                
+
+
+                _JsonData.Head.requestCode = _JsonData.RequestCode.SquareOffAll;
+
+                CommonReuqest Request = new CommonReuqest
+                {
+                    head = _JsonData.Head,
+                    body = _JsonData.Common
+                };
+
+
+
+                string response = ApiRequest.SendApiRequestCookies(_SquareOffAll, JsonConvert.SerializeObject(Request));
+
+                if (response != null)
+                {
+
+                    objResponseModel.ResponseData = JsonConvert.DeserializeObject<Response<object>>(response);
+
+                    return objResponseModel;
+
+                }
+
+
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+
+            return objResponseModel;
+        }
+        [HttpGet]
+        [Route("CancelOrderBulk")]
+        public ResponseModel CancelOrderBulk()
+        {
+            ResponseModel objResponseModel = new ResponseModel();
+            try
+            {
+
+                _JsonData.Head.requestCode = _JsonData.RequestCode.SquareOffAll;
+
+                CommonReuqest Request = new CommonReuqest
+                {
+                    head = _JsonData.Head,
+                    body = _JsonData.CancelOrderBulkRequestData
+                };
+
+                string response = ApiRequest.SendApiRequestCookies(_CancelOrderBulk, JsonConvert.SerializeObject(Request));
+
+                if (response != null)
+                {
+
+                    objResponseModel.ResponseData = JsonConvert.DeserializeObject<Response<object>>(response);
+
+                    return objResponseModel;
+
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+
+            return objResponseModel;
+        }
+
+        [HttpGet]
+        [Route("Historical")]
+        public HistoryResponse Historical(int scriptcode ,string timeinterval="5m")
+        {
+            HistoryResponse objResponseModel = new HistoryResponse();
+
+            try
+            {
+                //1594 / 1d ? from = 2022 - 01 - 24 & end = 2022 - 08 - 05
+                var currentDate = DateTime.Now.ToString("yyyy-MM-dd");
+                if (timeinterval == "5m")
+                {
+                   var  daysBack = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
+                    _History = _History + scriptcode + "/5m?from=" + daysBack + "&end=" + currentDate;
+
+
+                }
+                if (timeinterval == "15m")
+                {
+                    var daysBack = DateTime.Now.AddDays(-20).ToString("yyyy-MM-dd");
+                    _History = _History + scriptcode + "/15m?from=" + daysBack + "&end=" + currentDate;
+
+
+                }
+                if (timeinterval == "1h")
+                {
+                    var daysBack = DateTime.Now.AddDays(-70).ToString("yyyy-MM-dd");
+                    _History = _History + scriptcode + "/1h?from=" + daysBack + "&end=" + currentDate;
+
+
+                }
+                if (timeinterval == "1d")
+                {
+                    var daysBack = DateTime.Now.AddDays(-500).ToString("yyyy-MM-dd");
+                    _History = _History + scriptcode + "/1d?from=" + daysBack + "&end=" + currentDate;
+
+
+                }
+                //sevendaysdaysBack = sevendaysdaysBack.AddDays(-1);
+
+                //sevendaysdaysBack = DateTime.Today.AddDays(-7);
+                //dateRange.To = DateTime.Today.AddDays(1);
+
+                var oneMonthBack = DateTime.Now.ToString("yyyy-MM-dd");
+
+                var threeMonthBack = DateTime.Now.ToString("yyyy-MM-dd");
+                var sixMonthBack = DateTime.Now.ToString("yyyy-MM-dd");
+                var oneYeBack = DateTime.Now.ToString("yyyy-MM-dd");
+
+
                 string response = ApiRequest.SendApiRequestHistory(_History, "", "Get");
 
-                objResponseModel.ResponseData = JsonConvert.DeserializeObject<Response<HistoryResponse>>(response);
+                //objResponseModel = JsonConvert.DeserializeObject<Response<object>>(response);
+                //objResponseModel = JsonConvert.DeserializeObject<HistoryResponse>(response);
+
+                objResponseModel = JsonConvert.DeserializeObject<HistoryResponse>(response);
+
+
             }
             catch (Exception ex)
             {
@@ -643,7 +983,6 @@ namespace _5paisaAPI.Controllers
 
             return objResponseModel;
         }
-
 
         [HttpGet]
         [Route("WebsocketAPi")]
@@ -695,14 +1034,14 @@ namespace _5paisaAPI.Controllers
             return objResponseModel;
 
         }
-
+        [NonAction]
         public double roundToNSEPrice(double price)
         {
             var x = Math.Round(price, 2) * 20;
             var y = Math.Ceiling(x);
             return y / 20;
         }
-
+        [NonAction]
         public string prepareMonthlyExpiryFuturesSymbol(string inputSymbol)
         {
 
@@ -712,16 +1051,16 @@ namespace _5paisaAPI.Controllers
             //int monthExpiery = endOfMonth.Day;
 
             //var lastDayOfCurrentMonth = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.DaysInMonth(DateTime.Now.Year, DateTime.Now.Month));
-           
+
             if (lastDayOfCurrentMonth.DayOfWeek == DayOfWeek.Monday)
                 lastDayOfCurrentMonth = lastDayOfCurrentMonth.AddDays(+3);
-             if (lastDayOfCurrentMonth.DayOfWeek == DayOfWeek.Tuesday)
+            if (lastDayOfCurrentMonth.DayOfWeek == DayOfWeek.Tuesday)
                 lastDayOfCurrentMonth = lastDayOfCurrentMonth.AddDays(+2);
-             if (lastDayOfCurrentMonth.DayOfWeek == DayOfWeek.Wednesday)
+            if (lastDayOfCurrentMonth.DayOfWeek == DayOfWeek.Wednesday)
                 lastDayOfCurrentMonth = lastDayOfCurrentMonth.AddDays(+1);
             if (lastDayOfCurrentMonth.DayOfWeek == DayOfWeek.Sunday)
                 lastDayOfCurrentMonth = lastDayOfCurrentMonth.AddDays(-3);
-             if (lastDayOfCurrentMonth.DayOfWeek == DayOfWeek.Saturday)
+            if (lastDayOfCurrentMonth.DayOfWeek == DayOfWeek.Saturday)
                 lastDayOfCurrentMonth = lastDayOfCurrentMonth.AddDays(-2);
 
 
@@ -730,10 +1069,10 @@ namespace _5paisaAPI.Controllers
             var month = lastDayOfCurrentMonth.ToString("MM");
             var year = DateTime.Now.Year;
 
-            string futureSymbol = inputSymbol+ " " +  date + " MAY " + year + "_" + year + month + date;
+            string futureSymbol = inputSymbol + " " + date + " MAY " + year + "_" + year + month + date;
             return futureSymbol;
 
         }
-        
+
     }
 }

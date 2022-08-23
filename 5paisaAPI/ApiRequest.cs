@@ -58,7 +58,6 @@ namespace _5paisaAPI
         {
             string strresponse = "";
             var cookie = GetCookiesByName("5paisacookie");
-            var token = GetCookiesByName("JwtToken");
             try
             {
                 var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
@@ -72,10 +71,10 @@ namespace _5paisaAPI
                 }
                 else
                 {
-                    //httpWebRequest.Headers.Add("Ocp-Apim-Subscription-Key", GetCookiesByName("ASPXAUTH"));
+                    httpWebRequest.Headers.Add("Ocp-Apim-Subscription-Key", GetCookiesByName("ASPXAUTH"));
                     httpWebRequest.Headers.Add("x-clientcode", "56159485");
-                    httpWebRequest.Headers.Add("x-auth-token", token);
-                    httpWebRequest.Method = RequestType;
+                    httpWebRequest.Headers.Add("x-auth-token", GetCookiesByName("JwtToken"));
+
 
                 }
 
@@ -115,8 +114,6 @@ namespace _5paisaAPI
             return strresponse;
 
         }
-
-
         public static string SendApiRequestHistory(string url, string Request = "", string RequestType = "POST")
         {
             string strresponse = "";
